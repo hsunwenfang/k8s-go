@@ -2,7 +2,6 @@
 
 # substitute-kublet-in-aks
 
-
 - ssh access to the vmss nodes without debug container
     - generate ssh key pair
         - Azure Portal > VMSS > Reset Password
@@ -37,6 +36,16 @@
         - mv /usr/local/bin/kubelet /usr/local/bin/kubelet_prd; cp /home/azureuser/kubelet /usr/local/bin/kubelet; systemctl restart kubelet.service
     - Check kubelet log from start time
         - journalctl -u kubelet.service --since "2024-01-16 13:11:00"
+
+    
+# Automate with self-hosted agent
+
+- Add self-hosted runner
+    - https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/adding-self-hosted-runners
+- Check the runner
+    - https://docs.github.com/en/actions/hosting-your-own-runners/monitoring-and-troubleshooting-self-hosted-runners#monitoring-self-hosted-runners
+    - ./run.sh --check
+- [TODO] Cannot assign variable on run
 
 
 # Remark

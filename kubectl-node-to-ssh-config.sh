@@ -1,8 +1,11 @@
 #!/bin/bash
 
 # Set the standard username and identity file for SSH
-SSH_USER="azureuser"
-IDENTITY_FILE="/home/hsunwen/.ssh/keys/hsunprivatecniaks-masternode.pem"
+SSH_USER=$1
+IDENTITY_FILE=$2
+
+echo $SSH_USER
+echo $IDENTITY_FILE
 
 # Get node names and IPs from kubectl
  kubectl --kubeconfig /home/hsunwen/.kube/config get no -owide | tail -n +2 | awk '{print $1, $6}' | while read -r name ip; do
