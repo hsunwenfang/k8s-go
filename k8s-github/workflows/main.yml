@@ -1,0 +1,35 @@
+# runs on a self-hosted agent
+name: build-kubelet
+on: [push, workflow_dispatch]
+jobs:
+  check-bats-version:
+    # choose runner on label
+    runs-on: [self-hosted, linux, x64, k8s-node]
+    steps:
+    - uses: actions/checkout@v4
+    # run kubectl get node -owide and extrat the node name and ip address into variables
+    - name: get node name and ip of 1st row
+      run: |
+        kubectl get node -owide
+        echo "node_name=$(kubectl get nodes -owide | awk 'NR==2' | awk '{print $1}')" >> $GITHUB_ENV
+        echo "node_ip=$(kubectl get nodes -owide | awk 'NR==2' | awk '{print $6}')" >> $GITHUB_ENV
+    # scp file into the node by using the node name and ip address
+    - name : check node output
+      run:
+        for i in ${arr[@]}; do echo $i; done;
+        echo $node_name;
+        echo $node_ip;
+    - name: scp test
+      run:
+        scp -i ${{ secrets.SSH_KEY_PATH }} /home/${{ secrets.USER }}/test.sh  ${{secrets.USER}}@$node_ip:/home/${{secrets.USER}}/test.sh
+    - name: build kubelet
+      working-directory: /home/${{ secrets.USER }}/kubernetes
+      run:
+        KUBE_BUILD_PLATFORMS=linux/amd64 make all WHAT=cmd/kubelet
+        # KUBE_BUILD_PLATFORMS=linux/amd64 make all WHAT=cmd/kubelet GOFLAGS=-v
+    - name: scp kubelet to node
+      run:
+        scp -i ${{ secrets.SSH_KEY_PATH }} /home/${{ secrets.USER }}/kubernetes/_output/local/bin/linux/amd64/kubelet  ${{secrets.USER}}@$node_ip:/home/${{secrets.USER}}/kubelet
+    - name: replace and restart kubelet
+      run:
+        ssh -i ${{ secrets.SSH_KEY_PATH }} ${{secrets.USER}}@$node_ip "sudo mv /usr/local/bin/kubelet /usr/local/bin/kubelet_prd;sudo cp /home/${{secrets.USER}}/kubelet /usr/local/bin/kubelet;sudo systemctl restart kubelet.service"
